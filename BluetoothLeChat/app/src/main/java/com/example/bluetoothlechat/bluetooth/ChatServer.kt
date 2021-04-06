@@ -24,12 +24,16 @@ import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.os.ParcelUuid
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.bluetoothlechat.bluetooth.Message.RemoteMessage
 import com.example.bluetoothlechat.bluetooth.Message.LocalMessage
 import com.example.bluetoothlechat.chat.DeviceConnectionState
 import com.example.bluetoothlechat.server
+import com.example.bluetoothlechat.chat.BluetoothChatFragment
+import com.example.bluetoothlechat.chat.Run
+import com.example.bluetoothlechat.chat.clientDeviceList
 
 private const val TAG = "ChatServer"
 
@@ -53,8 +57,8 @@ object ChatServer {
 
 
     // LiveData for reporting the messages sent to the device
-    public val _boardcast = MutableLiveData<Integer>()
-    val boardcast = _boardcast as LiveData<Integer>
+//    public val _boardcast = MutableLiveData<Integer>()
+//    val boardcast = _boardcast as LiveData<Integer>
 
     // LiveData for reporting the messages sent to the device
     private val _messages = MutableLiveData<Message>()
@@ -100,7 +104,7 @@ object ChatServer {
     fun setCurrentChatConnection(device: BluetoothDevice) {
         currentDevice = device
         // Set gatt so BluetoothChatFragment can display the device data
-        _deviceConnection.value = DeviceConnectionState.Connected(device)
+        _deviceConnection.postValue(DeviceConnectionState.Connected(device))
         connectToChatDevice(device)
     }
 
@@ -121,7 +125,7 @@ object ChatServer {
                 Log.d(TAG, "onServicesDiscovered: message send: $success")
                 if (success) {
 
-                    _messages.value = Message.LocalMessage(message)
+                    _messages.postValue(Message.LocalMessage(message))
                 }
             } ?: run {
                 Log.d(TAG, "sendMessage: no gatt connection to send a message with")
@@ -265,12 +269,28 @@ object ChatServer {
                 message?.let {
 
                      _messages.postValue(RemoteMessage(it))
+                    sendMessage("BOARDCAST : "+it)
                     if(server)
                     {
+//                        sendMessage("BOARDCAST : "+it)
+                        setCurrentChatConnection(clientDeviceList.get(0))
                         sendMessage("BOARDCAST : "+it)
+                        var x :Int =0
+                        for (i in 1..10000000000)
+                            x++
+                        setCurrentChatConnection(clientDeviceList.get(1))
+                        sendMessage("BOARDCAST : "+it)
+//                        Run.after(30, {
+//                            setCurrentChatConnection(clientDeviceList.get(1))
+//                            sendMessage("BOARDCAST : "+it)
+//                        })
+                        Log.d("TARUN","BOARDCAST MSG SENT ");
+                    }
+                    else{
+                        Log.d("TARUN","BOARDCAST MSG DIDNT SENT ");
                     }
 
-//                    _messages.postValue(LocalMessage("THIS IS BOARDCAST MSG : "+it))
+                    //_messages.postValue(LocalMessage("THIS IS BOARDCAST MSG : "+it))
                 }
             }
         }

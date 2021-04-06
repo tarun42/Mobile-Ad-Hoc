@@ -109,6 +109,7 @@ class DeviceScanFragment : Fragment() {
             //deviceScanAdapter.updateItems(scanResults.values.toList())
 
                 connect(scanResults.values.toList())
+
             Toast.makeText(context, scanResults.values.toList().toString(),Toast.LENGTH_SHORT).show()
             binding.scanning.gone()
             binding.noDevices.gone()
@@ -152,6 +153,18 @@ class DeviceScanFragment : Fragment() {
         var bluetoothDeviceList = listOf<BluetoothDevice>()
         bluetoothDeviceList = list
         var bluetoothDevice = bluetoothDeviceList.get(0)
+        for (item in bluetoothDeviceList)
+        {
+            if(item.name == "realme#Pro")
+            {
+                Toast.makeText(context,"FOUND REALME",Toast.LENGTH_SHORT).show()
+                bluetoothDevice = item
+            }
+        }
+        if(bluetoothDeviceList.size == 2){
+            Toast.makeText(context,"IM SERVER COZ I HAVE @ DEVICES LIST",Toast.LENGTH_SHORT).show()
+        }
+        Toast.makeText(context,"device found connectig : "+bluetoothDevice.name,Toast.LENGTH_SHORT).show()
         onDeviceSelected(bluetoothDevice)
 
     }

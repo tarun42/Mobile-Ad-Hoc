@@ -44,9 +44,10 @@ class Run {
         }
     }
 }
+var clientDeviceList = listOf<BluetoothDevice>()
 class BluetoothChatFragment : Fragment() {
 
-    var clientDeviceList = listOf<BluetoothDevice>()
+
     private var _binding: FragmentBluetoothChatBinding? = null
     // this property is valid between onCreateView and onDestroyView.
     private val binding: FragmentBluetoothChatBinding
@@ -143,7 +144,7 @@ class BluetoothChatFragment : Fragment() {
         binding.connectedContainer.visible()
         binding.notConnectedContainer.gone()
 
-        val chattingWithString = resources.getString(R.string.chatting_with_device, device.address)
+        val chattingWithString = resources.getString(R.string.chatting_with_device, device.name)
         binding.connectedDeviceName.text = chattingWithString
         binding.sendMessage.setOnClickListener {
             val message = binding.messageText.text.toString()
@@ -161,13 +162,7 @@ class BluetoothChatFragment : Fragment() {
                 }
                 else {
 
-                    ChatServer.setCurrentChatConnection(clientDeviceList.get(0))
-                    ChatServer.sendMessage("message")
-                        Run.after(10, {
-                            ChatServer.setCurrentChatConnection(clientDeviceList.get(1))
-                            ChatServer.sendMessage("message")
-                        })
-                        Toast.makeText(context,"While got executed",Toast.LENGTH_SHORT).show()
+                    boardcastMsg(message)
 
                 }
 
@@ -176,7 +171,15 @@ class BluetoothChatFragment : Fragment() {
             }
         }
     }
-
+    fun boardcastMsg(message : String) {
+        ChatServer.setCurrentChatConnection(clientDeviceList.get(0))
+        ChatServer.sendMessage(message)
+        Run.after(30, {
+            ChatServer.setCurrentChatConnection(clientDeviceList.get(1))
+            ChatServer.sendMessage(message)
+        })
+        Toast.makeText(context,"While got executed",Toast.LENGTH_SHORT).show()
+    }
     private fun showDisconnected() {
         hideKeyboard()
         binding.notConnectedContainer.visible()
