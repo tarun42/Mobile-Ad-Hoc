@@ -24,8 +24,12 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.manet.mobile_ad_hoc.DeviceScanViewState
 import com.manet.mobile_ad_hoc.connection.constants.SERVICE_UUID
+import com.manet.mobile_ad_hoc.scan.Message
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 
 private const val TAG = "DeviceScanViewModel"
@@ -41,7 +45,11 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
     val viewState = _viewState as LiveData<DeviceScanViewState>
 
     // String key is the address of the bluetooth device
-
+    private val repeatObserver= Observer<Int> { num ->
+        Log.d("TAG", "Int"+num)
+//        binding.textview.text = message.toString()
+        startScan()
+    }
 
     // BluetoothAdapter should never be null since BLE is required per
     // the <uses-feature> tag in the AndroidManifest.xml
@@ -51,9 +59,9 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
     private var scanner: BluetoothLeScanner? = null
 
     private var scanCallback: DeviceScanCallback? = null
-    private val scanFilters: List<ScanFilter>
-    private val scanSettings: ScanSettings
-
+    private var scanFilters: List<ScanFilter>
+    private var scanSettings: ScanSettings
+    var isFirst : Boolean = true;
     init {
         // Setup scan filters and settings
         scanFilters = buildScanFilters()
@@ -61,7 +69,16 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
 
         // Start a scan for BLE devices
         startScan()
+        isFirst = false
     }
+    private fun startScancopy(){
+        scanFilters = buildScanFilters()
+        scanSettings = buildScanSettings()
+
+        // Start a scan for BLE devices
+        startScan()
+    }
+
 
     override fun onCleared() {
         super.onCleared()
@@ -78,6 +95,14 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
 //        adapter.setName(realDeviceName);
 //        Log.d("DeviceScanFragment","became client")
 //    }
+    fun startScanAgain()
+    {
+        scanFilters = buildScanFilters()
+        scanSettings = buildScanSettings()
+
+        // Start a scan for BLE devices
+        startScan()
+    }
     fun startScan() {
         // If advertisement is not supported on this device then other devices will not be able to
         // discover and connect to it.
@@ -90,7 +115,9 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
             scanner = adapter.bluetoothLeScanner
             Log.d(TAG, "Start Scanning")
             // Update the UI to indicate an active scan is starting
-            _viewState.value = DeviceScanViewState.ActiveScan
+
+            if(isFirst)
+                _viewState.value = DeviceScanViewState.ActiveScan
 
             // Stop scanning after the scan period
             Handler().postDelayed({ stopScanning() }, SCAN_PERIOD)
@@ -137,13 +164,14 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
     private inner class DeviceScanCallback : ScanCallback() {
         override fun onBatchScanResults(results: List<ScanResult>) {
             super.onBatchScanResults(results)
+            Log.d(TAG," [onBatchScanResults] callback got called ")
             for (item in results) {
                 item.device?.let { device ->
 //                    if(device.name != "realme Narzo 10")
                         scanResults[device.address] = device
                 }
             }
-            if(scanResults.isEmpty())
+            if(scanResults.isEmpty() && isFirst)
                 _viewState.value = DeviceScanViewState.ActiveScan;
             else
                 _viewState.value = DeviceScanViewState.ScanResults(scanResults)
@@ -154,11 +182,13 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
             result: ScanResult
         ) {
             super.onScanResult(callbackType, result)
-            result.device?.let { device ->
+            Log.d(TAG," [onScanResult] callback got called ")
+                result.device?.let { device ->
 //                if(device.name != "realme Narzo 10")
                     scanResults[device.address] = device
             }
-            if(scanResults.isEmpty())
+            Log.d(TAG , "Size of ScanResult : "+ scanResults.size)
+            if(scanResults.isEmpty() && isFirst)
                 _viewState.value = DeviceScanViewState.ActiveScan;
             else
                 _viewState.value = DeviceScanViewState.ScanResults(scanResults)
@@ -167,6 +197,7 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
         override fun onScanFailed(errorCode: Int) {
             super.onScanFailed(errorCode)
             // Send error state to the fragment to display
+            Log.d(TAG," [onScanFailed] callback got called ")
             val errorMessage = "Scan failed with error: $errorCode"
             _viewState.value = DeviceScanViewState.Error(errorMessage)
         }

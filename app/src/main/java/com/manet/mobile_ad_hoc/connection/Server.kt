@@ -16,6 +16,7 @@ import com.manet.mobile_ad_hoc.connection.constants
 import com.manet.mobile_ad_hoc.connection.constants.CONFIRM_UUID
 import com.manet.mobile_ad_hoc.connection.constants.MESSAGE_UUID
 import com.manet.mobile_ad_hoc.connection.constants.SERVICE_UUID
+import com.manet.mobile_ad_hoc.scan.Message
 import java.util.*
 
 private const val TAG = "Server"
@@ -36,8 +37,8 @@ object Server {
     private var advertiseData: AdvertiseData = buildAdvertiseData()
 
     // LiveData for reporting the messages sent to the device
-    private val _messages = MutableLiveData<String>()
-    val messages = _messages as LiveData<String>
+    private val _messages = MutableLiveData<Message>()
+    val messages = _messages as LiveData<Message>
 
     // LiveData for reporting connection requests
     private val _connectionRequest = MutableLiveData<BluetoothDevice>()
@@ -101,7 +102,7 @@ object Server {
                 val success = it.writeCharacteristic(messageCharacteristic)
                 Log.d(TAG, "onServicesDiscovered: message send: $success")
                 if (success) {
-                    _messages.value = message
+                    _messages.value = Message.LocalMessage(message)
                 }
             } ?: run {
                 Log.d(TAG, "sendMessage: no gatt connection to send a message with")
@@ -213,7 +214,7 @@ object Server {
                 val message = value?.toString(Charsets.UTF_8)
                 Log.d(TAG, "onCharacteristicWriteRequest: Have message: \"$message\"")
                 message?.let {
-                    _messages.postValue(it)
+                    _messages.postValue(Message.RemoteMessage(it))
                 }
             }
             else
