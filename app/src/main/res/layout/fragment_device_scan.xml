@@ -1,0 +1,142 @@
+
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/chat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="invisible">
+        <EditText
+            android:id="@+id/edit"
+            android:layout_height="50dp"
+            android:layout_width="match_parent"
+            android:hint="send msg"
+            android:layout_marginTop="100dp"
+            android:gravity="center_vertical"
+            ></EditText>
+
+        <Button
+            android:id="@+id/button"
+            android:layout_height="50dp"
+            android:layout_width="match_parent"
+            android:layout_below="@id/edit"
+            android:text="SEND"
+            ></Button>
+
+        <TextView
+            android:id="@+id/textview"
+            android:layout_below="@id/button"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            ></TextView>
+
+    </RelativeLayout>
+    <LinearLayout
+        android:id="@+id/scanning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="center"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Scanning for devices"
+            android:textSize="18sp"
+            android:paddingTop="16dp"/>
+    </LinearLayout>
+
+<!--    <androidx.recyclerview.widget.RecyclerView-->
+<!--        android:id="@+id/device_list"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:visibility="gone"/>-->
+
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+
+        android:visibility="gone"/>
+    <TextView
+        android:id="@+id/no_devices"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="40dp"
+        android:text="Becoming Server"
+        android:textSize="18sp"
+        android:paddingTop="16dp"/>
+
+    <LinearLayout
+        android:id="@+id/error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/error_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="No BLE devices found"/>
+
+        <Button
+            android:id="@+id/error_action"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/chat_confirm_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/chat_confirm_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/chat_deny"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="No"
+                tools:ignore="ButtonStyle" />
+
+            <Button
+                android:id="@+id/chat_confirm"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Yes"
+                tools:ignore="ButtonStyle" />
+        </LinearLayout>
+
+    </LinearLayout>
+</FrameLayout>

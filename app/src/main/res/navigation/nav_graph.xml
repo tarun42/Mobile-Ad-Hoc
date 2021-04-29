@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/enableBluetoothFragment">
+
+    <fragment
+        android:id="@+id/enableBluetoothFragment"
+        android:name="com.manet.mobile_ad_hoc.connection.EnableBluetoothFragment"
+        android:label="fragment_enable_bluetooth"
+        tools:layout="@layout/fragment_enable_bluetooth" >
+        <action
+            android:id="@+id/action_enableBluetoothFragment_to_enableLocationFragment"
+            app:destination="@id/enableLocationFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/enableLocationFragment"
+        android:name="com.manet.mobile_ad_hoc.connection.EnableLocationFragment"
+        android:label="fragment_enable_location"
+        tools:layout="@layout/fragment_enable_location" >
+        <action
+            android:id="@+id/action_enableLocationFragment_to_deviceScanFragment"
+            app:destination="@id/deviceScanFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/deviceScanFragment"
+        android:name="com.manet.mobile_ad_hoc.DeviceScanFragment"
+        android:label="DeviceScanFragment" >
+        <action
+            android:id="@+id/action_deviceScanFragment_to_chatFrag"
+            app:destination="@id/chatFrag" />
+    </fragment>
+    <fragment
+        android:id="@+id/chatFrag"
+        android:name="com.manet.mobile_ad_hoc.ChatFrag"
+        android:label="fragment_chat"
+        tools:layout="@layout/fragment_chat" />
+</navigation>
