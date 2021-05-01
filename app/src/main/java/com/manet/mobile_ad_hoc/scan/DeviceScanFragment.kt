@@ -15,7 +15,6 @@
  */
 package com.manet.mobile_ad_hoc
 
-
 import android.bluetooth.BluetoothDevice
 import android.os.Bundle
 import android.os.Handler
@@ -116,7 +115,7 @@ private val _repeatSearch = MutableLiveData<Int>()
 
     }
 
-    val UPDATE_INTERVAL = 15000L
+    val UPDATE_INTERVAL = 10000L
     private val updateWidgetHandler = Handler()
     private var updateWidgetRunnable: Runnable = Runnable {
         run {

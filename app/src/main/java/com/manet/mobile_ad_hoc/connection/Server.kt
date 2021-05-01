@@ -7,20 +7,31 @@ import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
+import android.os.Handler
 import android.os.ParcelUuid
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.manet.mobile_ad_hoc.DeviceConnectionState
-import com.manet.mobile_ad_hoc.connection.constants
+import com.manet.mobile_ad_hoc.Run
 import com.manet.mobile_ad_hoc.connection.constants.CONFIRM_UUID
 import com.manet.mobile_ad_hoc.connection.constants.MESSAGE_UUID
 import com.manet.mobile_ad_hoc.connection.constants.SERVICE_UUID
+import com.manet.mobile_ad_hoc.connection.constants.isServer
 import com.manet.mobile_ad_hoc.scan.Message
 import java.util.*
 
 private const val TAG = "Server"
 
+class Run {
+    companion object {
+        fun after(delay: Long, process: () -> Unit) {
+            Handler().postDelayed({
+                process()
+            }, delay)
+        }
+    }
+}
 object Server {
 
     // hold reference to app context to run the chat server
@@ -63,6 +74,7 @@ object Server {
     private var gatt: BluetoothGatt? = null
     private var messageCharacteristic: BluetoothGattCharacteristic? = null
 
+    var t1: Long = System.currentTimeMillis()
     fun startServer(app: Application) {
         bluetoothManager = app.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         if (!adapter.isEnabled) {
@@ -82,9 +94,11 @@ object Server {
     fun setCurrentChatConnection(device: BluetoothDevice) {
         currentDevice = device
         // Set gatt so BluetoothChatFragment can display the device data
-        _deviceConnection.value = DeviceConnectionState.Connected(device)
+//        _deviceConnection.value = DeviceConnectionState.Connected(device)
+        _deviceConnection.postValue(DeviceConnectionState.Connected(device))
         connectToChatDevice(device)
     }
+
 
     private fun connectToChatDevice(device: BluetoothDevice) {
         gattClientCallback = GattClientCallback()
@@ -103,6 +117,10 @@ object Server {
                 Log.d(TAG, "onServicesDiscovered: message send: $success")
                 if (success) {
                     _messages.value = Message.LocalMessage(message)
+                    t1= System.currentTimeMillis()
+                    Run.after(2000, {
+
+                    })
                 }
             } ?: run {
                 Log.d(TAG, "sendMessage: no gatt connection to send a message with")
@@ -193,7 +211,7 @@ object Server {
             )
             if (isSuccess && isConnected) {
                 _connectionRequest.postValue(device)
-                Log.d("TAG" , "GOT CONNECTION REQUEST")
+                Log.d("TAG", "GOT CONNECTION REQUEST")
             } else {
                 _deviceConnection.postValue(DeviceConnectionState.Disconnected)
             }
@@ -215,7 +233,17 @@ object Server {
                 Log.d(TAG, "onCharacteristicWriteRequest: Have message: \"$message\"")
                 message?.let {
                     _messages.postValue(Message.RemoteMessage(it))
+
+                    if(isServer)
+                    {
+                        Log.d(TAG, "RESPONSE MSG FROM SERVER IS SENDING...")
+                        setCurrentChatConnection(device)
+                        sendMessage(device.name + " CONFIRMATION ")
+                    }
+
+
                 }
+
             }
             else
             {
