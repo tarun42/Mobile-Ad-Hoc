@@ -16,6 +16,7 @@ import com.manet.mobile_ad_hoc.DeviceConnectionState
 import com.manet.mobile_ad_hoc.Run
 import com.manet.mobile_ad_hoc.connection.constants.CONFIRM_UUID
 import com.manet.mobile_ad_hoc.connection.constants.MESSAGE_UUID
+import com.manet.mobile_ad_hoc.connection.constants.SERVER_MESSAGE_UUID
 import com.manet.mobile_ad_hoc.connection.constants.SERVICE_UUID
 import com.manet.mobile_ad_hoc.connection.constants.isServer
 import com.manet.mobile_ad_hoc.scan.Message
@@ -74,6 +75,7 @@ object Server {
     private var gatt: BluetoothGatt? = null
     private var messageCharacteristic: BluetoothGattCharacteristic? = null
 
+
     var t1: Long = System.currentTimeMillis()
     fun startServer(app: Application) {
         bluetoothManager = app.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -116,11 +118,12 @@ object Server {
                 val success = it.writeCharacteristic(messageCharacteristic)
                 Log.d(TAG, "onServicesDiscovered: message send: $success")
                 if (success) {
-                    _messages.value = Message.LocalMessage(message)
+//                    _messages.value = Message.LocalMessage(message)
+                    _messages.postValue(Message.LocalMessage(message))
                     t1= System.currentTimeMillis()
-                    Run.after(2000, {
-
-                    })
+//                    Run.after(2000, {
+//
+//                    })
                 }
             } ?: run {
                 Log.d(TAG, "sendMessage: no gatt connection to send a message with")
@@ -152,6 +155,12 @@ object Server {
                 BluetoothGattCharacteristic.PERMISSION_WRITE
         )
         service.addCharacteristic(messageCharacteristic)
+        val messageServerCharacteristic = BluetoothGattCharacteristic(
+                SERVER_MESSAGE_UUID,
+                BluetoothGattCharacteristic.PROPERTY_WRITE,
+                BluetoothGattCharacteristic.PERMISSION_WRITE
+        )
+        service.addCharacteristic(messageServerCharacteristic)
         val confirmCharacteristic = BluetoothGattCharacteristic(
                 CONFIRM_UUID,
                 BluetoothGattCharacteristic.PROPERTY_WRITE,
@@ -213,6 +222,7 @@ object Server {
                 _connectionRequest.postValue(device)
                 Log.d("TAG", "GOT CONNECTION REQUEST")
             } else {
+                Log.d("TAG", "GOT DIS-CONNECTION REQUEST")
                 _deviceConnection.postValue(DeviceConnectionState.Disconnected)
             }
         }
@@ -237,11 +247,11 @@ object Server {
                     if(isServer)
                     {
                         Log.d(TAG, "RESPONSE MSG FROM SERVER IS SENDING...")
-                        setCurrentChatConnection(device)
+//                        setCurrentChatConnection(device)
+                        _deviceConnection.postValue(DeviceConnectionState.Connected(device))
+                        connectToChatDevice(device)
                         sendMessage(device.name + " CONFIRMATION ")
                     }
-
-
                 }
 
             }
