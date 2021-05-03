@@ -31,10 +31,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bluetoothlechat.*
 import com.example.bluetoothlechat.chat.MessageAdapter
 import com.example.bluetoothlechat.scan.DeviceScanViewModel
-import com.manet.mobile_ad_hoc.connection.*
-import com.manet.mobile_ad_hoc.connection.constants.isFirst
-import com.manet.mobile_ad_hoc.connection.constants.isScanWorked
+import com.manet.mobile_ad_hoc.connection.Server
 import com.manet.mobile_ad_hoc.connection.constants.isServer
+import com.manet.mobile_ad_hoc.connection.exhaustive
+import com.manet.mobile_ad_hoc.connection.gone
+import com.manet.mobile_ad_hoc.connection.visible
 import com.manet.mobile_ad_hoc.databinding.FragmentDeviceScanBinding
 import com.manet.mobile_ad_hoc.scan.Message
 import java.util.*
@@ -44,6 +45,7 @@ import java.util.concurrent.TimeUnit
 private const val TAG = "DeviceScanFragment"
 const val GATT_KEY = "gatt_bundle_key"
 private var CopyscanResults = mutableMapOf<String, BluetoothDevice>()
+private var UniversalResults = mutableMapOf<String, BluetoothDevice>()
 
 class Run {
     companion object {
@@ -106,30 +108,28 @@ private val _repeatSearch = MutableLiveData<Int>()
         }.exhaustive
     }
 
-    private val onDeviceSelected: (BluetoothDevice) -> Unit = { device ->
-        Server.setCurrentChatConnection(device)
-//        // navigate back to chat fragment
-//        findNavController().popBackStack()
-//        findNavController().navigate(R.id.action_deviceScanFragment_to_chatFrag)
-
+//    private val onDeviceSelected: (BluetoothDevice) -> Unit = { device ->
+//        Server.setCurrentChatConnection(device)
+////        // navigate back to chat fragment
+////        findNavController().popBackStack()
+////        findNavController().navigate(R.id.action_deviceScanFragment_to_chatFrag)
+//
+//    }
+    fun onDeviceSelected(device : BluetoothDevice,msg : String)
+    {
+        Server.setCurrentChatConnection(device,msg)
     }
-
-    val UPDATE_INTERVAL = 10000L
+    val UPDATE_INTERVAL = 8000L
     private val updateWidgetHandler = Handler()
     private var updateWidgetRunnable: Runnable = Runnable {
         run {
             //Update UI
-            constants.isScanWorked = false
+
             Log.d("TAG","start1")
             viewModel.startScanAgain()
             Log.d("TAG","start2")
             // Re-run it after the update interval
-//            if(!isScanWorked)
-//            {
-//                CopyscanResults.clear();
-//            }
             updateWidgetHandler.postDelayed(updateWidgetRunnable, UPDATE_INTERVAL)
-
         }
 
     }
@@ -160,13 +160,13 @@ private val _repeatSearch = MutableLiveData<Int>()
             var count: Int = 1;
             if (message.isNotEmpty()) {
                 Log.d(TAG, "SENDMESSGE PRESSED")
-
                 for ((k, v) in CopyscanResults) {
-                    Run.after((800 * count).toLong(), {
-//                        onDeviceSelected(v)
-                        Server.sendMessage(message)
+                    Run.after((500 * count).toLong(), {
+                        onDeviceSelected(v,message)
+//                        Server.sendMessage(message)
                     })
                     count++;
+
                 }
                 Log.d("TAG","COUNT : "+count)
             }
@@ -218,35 +218,39 @@ private val _repeatSearch = MutableLiveData<Int>()
     }
 
     private fun showResults(scanResults: Map<String, BluetoothDevice>) {
-        Log.d(TAG,"showResults GOT CALLED")
         if (isServer)
             requireActivity().setTitle("Server")
         else
             requireActivity().setTitle("Client")
-
         Log.d(TAG, "List of device Found")
         for ((k, v) in scanResults) {
-            onDeviceSelected(v)
+//            onDeviceSelected(v)
+            if(!UniversalResults.containsKey(k))
+            {
+                UniversalResults[k] = v
+                onDeviceSelected(v,"")
+            }
             Log.d(TAG, k + "  " + v.name)
-        }
 
+        }
         CopyscanResults = scanResults as MutableMap<String, BluetoothDevice>;
         Log.d(TAG, "SIZE : " + scanResults.size)
-        if (scanResults.isNotEmpty()  ) {
+        if (scanResults.isNotEmpty()) {
 
-            Log.d(TAG,"if (scanResults.isNotEmpty()  )")
+//            binding.deviceList.visible()
+//            deviceScanAdapter.updateItems(scanResults.values.toList())
+
+//            for ((k, v) in scanResults) {
+//                onDeviceSelected(v)
+//            }
+//            binding.chat.visible()
             binding.connectedContainer.visible()
 
             binding.scanning.gone()
             binding.noDevices.gone()
             binding.error.gone()
             binding.chatConfirmContainer.gone()
-        }
-        else if(scanResults.isEmpty() && !isFirst ){
-            Log.d(TAG,"==================else if(scanResults.isEmpty() && !isFirst================== ")
-        }
-            else {
-            Log.d(TAG,"==================else================== ")
+        } else {
             showNoDevices()
         }
     }

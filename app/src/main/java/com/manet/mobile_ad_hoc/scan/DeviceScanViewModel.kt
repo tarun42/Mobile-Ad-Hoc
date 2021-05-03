@@ -27,8 +27,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.manet.mobile_ad_hoc.DeviceScanViewState
 import com.manet.mobile_ad_hoc.connection.constants.SERVICE_UUID
-import com.manet.mobile_ad_hoc.connection.constants.isFirst
-import com.manet.mobile_ad_hoc.connection.constants.isScanWorked
 import com.manet.mobile_ad_hoc.scan.Message
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -37,7 +35,7 @@ import java.util.concurrent.TimeUnit
 private const val TAG = "DeviceScanViewModel"
 // 30 second scan period
 private const val SCAN_PERIOD = 5000L
-private var scanResults = mutableMapOf<String, BluetoothDevice>()
+private val scanResults = mutableMapOf<String, BluetoothDevice>()
 
 class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -63,6 +61,7 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
     private var scanCallback: DeviceScanCallback? = null
     private var scanFilters: List<ScanFilter>
     private var scanSettings: ScanSettings
+    var isFirst : Boolean = true;
     init {
         // Setup scan filters and settings
         scanFilters = buildScanFilters()
@@ -70,7 +69,7 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
 
         // Start a scan for BLE devices
         startScan()
-
+        isFirst = false
     }
     private fun startScancopy(){
         scanFilters = buildScanFilters()
@@ -127,7 +126,6 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
         scanCallback = null
         // return the current results
         _viewState.value = DeviceScanViewState.ScanResults(scanResults)
-        isFirst = false
     }
 
     /**
@@ -156,21 +154,16 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
     private inner class DeviceScanCallback : ScanCallback() {
         override fun onBatchScanResults(results: List<ScanResult>) {
             super.onBatchScanResults(results)
-            isScanWorked = true
             Log.d(TAG," [onBatchScanResults] callback got called ")
-            scanResults.clear()
             for (item in results) {
                 item.device?.let { device ->
-//                    if(device.name != "realme Narzo 10")
                         scanResults[device.address] = device
-                        Log.d(TAG,device.name)
                 }
             }
             if(scanResults.isEmpty() && isFirst)
                 _viewState.value = DeviceScanViewState.ActiveScan;
             else
                 _viewState.value = DeviceScanViewState.ScanResults(scanResults)
-//            scanResults.clear()
         }
 
         override fun onScanResult(
@@ -178,20 +171,15 @@ class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
             result: ScanResult
         ) {
             super.onScanResult(callbackType, result)
-            isScanWorked = true
             Log.d(TAG," [onScanResult] callback got called ")
-            scanResults.clear()
                 result.device?.let { device ->
-//                if(device.name != "realme Narzo 10")
                     scanResults[device.address] = device
-                    Log.d(TAG,device.name)
             }
             Log.d(TAG , "Size of ScanResult : "+ scanResults.size)
             if(scanResults.isEmpty() && isFirst)
                 _viewState.value = DeviceScanViewState.ActiveScan;
             else
                 _viewState.value = DeviceScanViewState.ScanResults(scanResults)
-//            scanResults.clear()
         }
 
         override fun onScanFailed(errorCode: Int) {
