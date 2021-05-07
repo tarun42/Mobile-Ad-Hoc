@@ -32,6 +32,7 @@ import com.example.bluetoothlechat.*
 import com.example.bluetoothlechat.chat.MessageAdapter
 import com.example.bluetoothlechat.scan.DeviceScanViewModel
 import com.manet.mobile_ad_hoc.connection.Server
+import com.manet.mobile_ad_hoc.connection.constants.globalSuccess
 import com.manet.mobile_ad_hoc.connection.constants.isServer
 import com.manet.mobile_ad_hoc.connection.exhaustive
 import com.manet.mobile_ad_hoc.connection.gone
@@ -158,16 +159,19 @@ private val _repeatSearch = MutableLiveData<Int>()
             Log.d(TAG, "SENDMESSGE PRESSED")
             val message = binding.messageText.text.toString()
             var count: Int = 1;
+            var tempFlag = false
             if (message.isNotEmpty()) {
                 Log.d(TAG, "SENDMESSGE PRESSED")
+
                 for ((k, v) in CopyscanResults) {
                     Run.after((500 * count).toLong(), {
                         onDeviceSelected(v,message)
 //                        Server.sendMessage(message)
                     })
                     count++;
-
                 }
+
+                globalSuccess = false;
                 Log.d("TAG","COUNT : "+count)
             }
 

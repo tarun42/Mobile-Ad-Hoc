@@ -39,6 +39,7 @@ private val scanResults = mutableMapOf<String, BluetoothDevice>()
 
 class DeviceScanViewModel(app: Application) : AndroidViewModel(app) {
 
+
     var realDeviceName : String? = null
     // LiveData for sending the view state to the DeviceScanFragment
     private val _viewState = MutableLiveData<DeviceScanViewState>()

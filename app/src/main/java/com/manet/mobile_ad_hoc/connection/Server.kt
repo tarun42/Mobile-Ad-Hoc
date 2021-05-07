@@ -16,7 +16,10 @@ import com.manet.mobile_ad_hoc.DeviceConnectionState
 import com.manet.mobile_ad_hoc.Run
 import com.manet.mobile_ad_hoc.connection.constants.CONFIRM_UUID
 import com.manet.mobile_ad_hoc.connection.constants.MESSAGE_UUID
+import com.manet.mobile_ad_hoc.connection.constants.MESSAGE_UUID2
 import com.manet.mobile_ad_hoc.connection.constants.SERVICE_UUID
+import com.manet.mobile_ad_hoc.connection.constants.globalStr
+import com.manet.mobile_ad_hoc.connection.constants.globalSuccess
 import com.manet.mobile_ad_hoc.connection.constants.isServer
 import com.manet.mobile_ad_hoc.scan.Message
 import java.util.*
@@ -73,6 +76,7 @@ object Server {
 
     private var gatt: BluetoothGatt? = null
     private var messageCharacteristic: BluetoothGattCharacteristic? = null
+    private var message2Characteristic: BluetoothGattCharacteristic? = null
 
     var t1: Long = System.currentTimeMillis()
     fun startServer(app: Application) {
@@ -108,18 +112,44 @@ object Server {
 
     private fun sendMessage(message: String): Boolean {
         Log.d(TAG, "Send a message")
-        messageCharacteristic?.let { characteristic ->
-            characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-            val messageBytes = message.toByteArray(Charsets.UTF_8)
-            characteristic.value = messageBytes
-            gatt?.let {
-                val success = it.writeCharacteristic(messageCharacteristic)
-                Log.d(TAG, "onServicesDiscovered: message send: $success")
-                if (success) {
-                    _messages.postValue( Message.LocalMessage(message))
+
+        if(isServer)
+        {
+            Log.d(TAG,"Sending msg using message2Characteristic")
+            message2Characteristic?.let { characteristic ->
+                characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                val messageBytes = message.toByteArray(Charsets.UTF_8)
+                characteristic.value = messageBytes
+                gatt?.let {
+                    val success = it.writeCharacteristic(message2Characteristic)
+                    Log.d(TAG, "if(isServer)block : onServicesDiscovered: message send: $success")
+                    if (success && message!= globalStr) {
+                        _messages.postValue(Message.LocalMessage(message))
+                        globalStr = message;
+                    }
+                    return success
+                } ?: run {
+                    Log.d(TAG, "sendMessage: no gatt connection to send a message with")
                 }
-            } ?: run {
-                Log.d(TAG, "sendMessage: no gatt connection to send a message with")
+            }
+        }
+        else {
+            Log.d(TAG,"Sending msg using messageCharacteristic")
+            messageCharacteristic?.let { characteristic ->
+                characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                val messageBytes = message.toByteArray(Charsets.UTF_8)
+                characteristic.value = messageBytes
+                gatt?.let {
+                    val success = it.writeCharacteristic(messageCharacteristic)
+                    Log.d(TAG, "if(not isServer)block : onServicesDiscovered: message send: $success")
+                    if (success && message!= globalStr) {
+                        _messages.postValue(Message.LocalMessage(message))
+                        globalStr = message;
+                    }
+                    return success
+                } ?: run {
+                    Log.d(TAG, "sendMessage: no gatt connection to send a message with")
+                }
             }
         }
         return false
@@ -148,6 +178,12 @@ object Server {
                 BluetoothGattCharacteristic.PERMISSION_WRITE
         )
         service.addCharacteristic(messageCharacteristic)
+        val message2Characteristic = BluetoothGattCharacteristic(
+                MESSAGE_UUID2,
+                BluetoothGattCharacteristic.PROPERTY_WRITE,
+                BluetoothGattCharacteristic.PERMISSION_WRITE
+        )
+        service.addCharacteristic(message2Characteristic)
         val confirmCharacteristic = BluetoothGattCharacteristic(
                 CONFIRM_UUID,
                 BluetoothGattCharacteristic.PROPERTY_WRITE,
@@ -223,28 +259,33 @@ object Server {
                 value: ByteArray?
         ) {
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value)
-            if (characteristic.uuid == MESSAGE_UUID) {
+            if (characteristic.uuid == MESSAGE_UUID && isServer) {
+
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
                 val message = value?.toString(Charsets.UTF_8)
                 var tempDevice : BluetoothDevice = device
-                Log.d(TAG, "Server : onCharacteristicWriteRequest: Have message: \"$message\"")
+                Log.d(TAG, "Server( if (characteristic.uuid == MESSAGE_UUID && isServer) ) : onCharacteristicWriteRequest: Have message: \"$message\"")
                 message?.let {
                     _messages.postValue(Message.RemoteMessage(it))
 
                     if(isServer)
                     {
                         Log.d(TAG, "RESPONSE MSG FROM SERVER IS SENDING...")
-                        setCurrentChatConnection(tempDevice,tempDevice.name + " CONFIRMATION ")
+                        setCurrentChatConnection(tempDevice, " CONFIRMATION ")
 //                        sendMessage(device.name + " CONFIRMATION ")
                     }
                 }
             }
-            else
+            else if(characteristic.uuid == MESSAGE_UUID2 && !isServer)
             {
                 // if message received from unregister user
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
                 val message = value?.toString(Charsets.UTF_8)
-                Log.d(TAG, "onCharacteristicWriteRequest: Have message not from register user: \"$message\"")
+                var tempDevice : BluetoothDevice = device
+                Log.d(TAG, "Server( if(characteristic.uuid == MESSAGE_UUID2 && !isServer) ) : onCharacteristicWriteRequest: Have message: \"$message\"")
+                message?.let {
+                    _messages.postValue(Message.RemoteMessage(it))
+                }
             }
         }
     }
@@ -270,8 +311,13 @@ object Server {
                 gatt = discoveredGatt
                 val service = discoveredGatt.getService(SERVICE_UUID)
                 messageCharacteristic = service.getCharacteristic(MESSAGE_UUID)
+                message2Characteristic = service.getCharacteristic(MESSAGE_UUID2)
                 if(msg.isNotEmpty())
-                    sendMessage(msg)
+                {
+                    globalSuccess = sendMessage(msg)
+
+                }
+
                 msg = ""
             }
         }

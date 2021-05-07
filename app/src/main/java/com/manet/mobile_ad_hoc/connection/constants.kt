@@ -12,7 +12,7 @@ object constants {
      * UUID for the message
      */
     val MESSAGE_UUID: UUID = UUID.fromString("7db3e235-3608-41f3-a03c-955fcbd2ea4b")
-
+    val MESSAGE_UUID2: UUID = UUID.fromString("1e7dc879-c1ca-4839-a3eb-be7ab3ac2650")
     /**
      * UUID to confirm device connection
      */
@@ -21,6 +21,8 @@ object constants {
     const val REQUEST_ENABLE_BT = 1
     const val LOCATION_REQUEST_CODE = 0
     var isServer : Boolean = false;
+    var globalSuccess : Boolean = false
+    var globalStr : String = "$$$"
 }
 
 fun View.visible() {
