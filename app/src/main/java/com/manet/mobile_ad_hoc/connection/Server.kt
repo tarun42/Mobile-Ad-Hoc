@@ -78,7 +78,7 @@ object Server {
     private var messageCharacteristic: BluetoothGattCharacteristic? = null
     private var message2Characteristic: BluetoothGattCharacteristic? = null
 
-    var t1: Long = System.currentTimeMillis()
+//    var t1: Long = System.currentTimeMillis()
     fun startServer(app: Application) {
         bluetoothManager = app.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         if (!adapter.isEnabled) {

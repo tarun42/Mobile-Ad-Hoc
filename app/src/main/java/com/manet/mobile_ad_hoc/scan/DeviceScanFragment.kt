@@ -96,8 +96,8 @@ class DeviceScanFragment : Fragment() {
 //    private val deviceScanAdapter by lazy {
 //        DeviceScanAdapter(onDeviceSelected)
 //    }
-private val _repeatSearch = MutableLiveData<Int>()
-    val repeatSearch = _repeatSearch as LiveData<Int>
+//private val _repeatSearch = MutableLiveData<Int>()
+//    val repeatSearch = _repeatSearch as LiveData<Int>
 
     private val viewStateObserver = Observer<DeviceScanViewState> { state ->
         when (state) {
@@ -156,7 +156,7 @@ private val _repeatSearch = MutableLiveData<Int>()
         binding.messages.adapter = adapter
 
         binding.sendMessage.setOnClickListener(View.OnClickListener {
-            Log.d(TAG, "SENDMESSGE PRESSED")
+//            Log.d(TAG, "SENDMESSGE PRESSED")
             val message = binding.messageText.text.toString()
             var count: Int = 1;
             var tempFlag = false

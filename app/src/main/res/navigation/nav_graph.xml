@@ -20,8 +20,8 @@
         android:label="fragment_enable_location"
         tools:layout="@layout/fragment_enable_location" >
         <action
-            android:id="@+id/action_enableLocationFragment_to_deviceScanFragment"
-            app:destination="@id/deviceScanFragment" />
+            android:id="@+id/action_enableLocationFragment_to_enableWifiFragment"
+            app:destination="@id/enableWifiFragment" />
     </fragment>
     <fragment
         android:id="@+id/deviceScanFragment"
@@ -36,4 +36,13 @@
         android:name="com.manet.mobile_ad_hoc.ChatFrag"
         android:label="fragment_chat"
         tools:layout="@layout/fragment_chat" />
+    <fragment
+        android:id="@+id/enableWifiFragment"
+        android:name="com.manet.mobile_ad_hoc.connection.EnableWifiFragment"
+        android:label="fragment_enable_wifi"
+        tools:layout="@layout/fragment_enable_wifi" >
+        <action
+            android:id="@+id/action_enableWifiFragment_to_deviceScanFragment"
+            app:destination="@id/deviceScanFragment" />
+    </fragment>
 </navigation>

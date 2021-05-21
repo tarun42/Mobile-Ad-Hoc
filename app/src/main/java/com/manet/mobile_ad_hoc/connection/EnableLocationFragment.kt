@@ -51,7 +51,7 @@ class EnableLocationFragment : Fragment() {
 
         if (hasLocationPermission) {
             // Navigate to the chat fragment
-            findNavController().navigate(R.id.action_enableLocationFragment_to_deviceScanFragment)
+            findNavController().navigate(R.id.action_enableLocationFragment_to_enableWifiFragment)
         } else {
             requestPermissions(
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -71,7 +71,7 @@ class EnableLocationFragment : Fragment() {
                 if (grantResults.isNotEmpty() &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // Navigate to the chat fragment
-                    findNavController().navigate(R.id.action_enableLocationFragment_to_deviceScanFragment)
+                    findNavController().navigate(R.id.action_enableLocationFragment_to_enableWifiFragment)
                 }
             }
         }
