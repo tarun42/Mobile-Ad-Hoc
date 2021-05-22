@@ -5,33 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <RelativeLayout
-        android:id="@+id/chat"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="invisible">
-        <EditText
-            android:id="@+id/edit"
-            android:layout_height="50dp"
-            android:layout_width="match_parent"
-            android:hint="send msg"
-            android:layout_marginTop="100dp"
-            android:gravity="center_vertical"
-            ></EditText>
-        <Button
-            android:id="@+id/button"
-            android:layout_height="50dp"
-            android:layout_width="match_parent"
-            android:layout_below="@id/edit"
-            android:text="SEND"
-            ></Button>
-        <TextView
-            android:id="@+id/textview"
-            android:layout_below="@id/button"
-            android:layout_width="match_parent"
-            android:layout_height="50dp">
-        </TextView>
-    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/scanning"

@@ -31,14 +31,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bluetoothlechat.*
 import com.example.bluetoothlechat.chat.MessageAdapter
 import com.example.bluetoothlechat.scan.DeviceScanViewModel
+import com.google.gson.Gson
 import com.manet.mobile_ad_hoc.connection.Server
 import com.manet.mobile_ad_hoc.connection.constants.globalSuccess
+import com.manet.mobile_ad_hoc.connection.constants.isHost
 import com.manet.mobile_ad_hoc.connection.constants.isServer
 import com.manet.mobile_ad_hoc.connection.exhaustive
 import com.manet.mobile_ad_hoc.connection.gone
 import com.manet.mobile_ad_hoc.connection.visible
 import com.manet.mobile_ad_hoc.databinding.FragmentDeviceScanBinding
 import com.manet.mobile_ad_hoc.scan.Message
+import com.manet.wifidirect.packet
 import java.util.*
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -60,6 +63,7 @@ class Run {
 
 class DeviceScanFragment : Fragment() {
 
+    var activity : MainActivity? = null;
     private val deviceConnectionObserver = Observer<DeviceConnectionState> { state ->
         when(state) {
             is DeviceConnectionState.Connected -> {
@@ -151,9 +155,10 @@ class DeviceScanFragment : Fragment() {
             savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentDeviceScanBinding.inflate(inflater, container, false)
-
         binding.messages.layoutManager = LinearLayoutManager(context)
         binding.messages.adapter = adapter
+
+        activity = context as MainActivity ;
 
         binding.sendMessage.setOnClickListener(View.OnClickListener {
 //            Log.d(TAG, "SENDMESSGE PRESSED")
@@ -163,14 +168,17 @@ class DeviceScanFragment : Fragment() {
             if (message.isNotEmpty()) {
                 Log.d(TAG, "SENDMESSGE PRESSED")
 
+                var datapacket = Gson().toJson(packet(message,"name","none","Ble",1))
+
                 for ((k, v) in CopyscanResults) {
                     Run.after((500 * count).toLong(), {
-                        onDeviceSelected(v,message)
-//                        Server.sendMessage(message)
+                        onDeviceSelected(v,datapacket.trim())
                     })
                     count++;
                 }
 
+                datapacket = Gson().toJson(packet(message.trim(),"name","none","wifi",1))
+                boardCast(datapacket.trim() )
                 globalSuccess = false;
                 Log.d("TAG","COUNT : "+count)
             }
@@ -261,6 +269,10 @@ class DeviceScanFragment : Fragment() {
 
     private fun showNoDevices() {
 
+        if(!isServer)
+        {
+            activity!!.discoverPeers()
+        }
         isServer = true;
 
         requireActivity().setTitle("Server")

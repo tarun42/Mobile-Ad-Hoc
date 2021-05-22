@@ -12,8 +12,10 @@ import android.os.ParcelUuid
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.google.gson.Gson
+import com.google.gson.stream.JsonReader
 import com.manet.mobile_ad_hoc.DeviceConnectionState
-import com.manet.mobile_ad_hoc.Run
+import com.manet.mobile_ad_hoc.boardCast
 import com.manet.mobile_ad_hoc.connection.constants.CONFIRM_UUID
 import com.manet.mobile_ad_hoc.connection.constants.MESSAGE_UUID
 import com.manet.mobile_ad_hoc.connection.constants.MESSAGE_UUID2
@@ -22,6 +24,8 @@ import com.manet.mobile_ad_hoc.connection.constants.globalStr
 import com.manet.mobile_ad_hoc.connection.constants.globalSuccess
 import com.manet.mobile_ad_hoc.connection.constants.isServer
 import com.manet.mobile_ad_hoc.scan.Message
+import com.manet.wifidirect.packet
+import java.io.StringReader
 import java.util.*
 
 private const val TAG = "Server"
@@ -51,7 +55,7 @@ object Server {
     private var advertiseData: AdvertiseData = buildAdvertiseData()
 
     // LiveData for reporting the messages sent to the device
-    private val _messages = MutableLiveData<Message>()
+    val _messages = MutableLiveData<Message>()
     val messages = _messages as LiveData<Message>
 
     // LiveData for reporting connection requests
@@ -110,8 +114,12 @@ object Server {
         gattClient = device.connectGatt(app, false, gattClientCallback)
     }
 
-    private fun sendMessage(message: String): Boolean {
+    public  fun sendMessage(message: String): Boolean {
         Log.d(TAG, "Send a message")
+        val gson = Gson()
+        val reader = JsonReader(StringReader(message))
+        reader.setLenient(true)
+        val dataPacket : packet = gson.fromJson(reader, packet::class.java)
 
         if(isServer)
         {
@@ -124,8 +132,9 @@ object Server {
                     val success = it.writeCharacteristic(message2Characteristic)
                     Log.d(TAG, "if(isServer)block : onServicesDiscovered: message send: $success")
                     if (success && message!= globalStr) {
-                        _messages.postValue(Message.LocalMessage(message))
+                        _messages.postValue(Message.LocalMessage(dataPacket.message))
                         globalStr = message;
+
                     }
                     return success
                 } ?: run {
@@ -143,7 +152,7 @@ object Server {
                     val success = it.writeCharacteristic(messageCharacteristic)
                     Log.d(TAG, "if(not isServer)block : onServicesDiscovered: message send: $success")
                     if (success && message!= globalStr) {
-                        _messages.postValue(Message.LocalMessage(message))
+                        _messages.postValue(Message.LocalMessage(dataPacket.message))
                         globalStr = message;
                     }
                     return success
@@ -266,12 +275,21 @@ object Server {
                 var tempDevice : BluetoothDevice = device
                 Log.d(TAG, "Server( if (characteristic.uuid == MESSAGE_UUID && isServer) ) : onCharacteristicWriteRequest: Have message: \"$message\"")
                 message?.let {
-                    _messages.postValue(Message.RemoteMessage(it))
+//                    val recievedPacket = Gson().fromJson<packet>(message, packet::class.java)
+
+                    val gson = Gson()
+                    val reader = JsonReader(StringReader(message))
+                    reader.setLenient(true)
+                    val recievedPacket : packet = gson.fromJson(reader, packet::class.java)
+
+
+                    _messages.postValue(Message.RemoteMessage(recievedPacket.message))
 
                     if(isServer)
                     {
                         Log.d(TAG, "RESPONSE MSG FROM SERVER IS SENDING...")
                         setCurrentChatConnection(tempDevice, " CONFIRMATION ")
+                        boardCast(message)
 //                        sendMessage(device.name + " CONFIRMATION ")
                     }
                 }
@@ -281,10 +299,17 @@ object Server {
                 // if message received from unregister user
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
                 val message = value?.toString(Charsets.UTF_8)
+//                val recievedPacket = Gson().fromJson<packet>(message,packet::class.java)
+                val gson = Gson()
+                val reader = JsonReader(StringReader(message))
+                reader.setLenient(true)
+                Log.d("recievedPacket",""+message)
+                val recievedPacket : packet = gson.fromJson(reader, packet::class.java)
+
                 var tempDevice : BluetoothDevice = device
                 Log.d(TAG, "Server( if(characteristic.uuid == MESSAGE_UUID2 && !isServer) ) : onCharacteristicWriteRequest: Have message: \"$message\"")
                 message?.let {
-                    _messages.postValue(Message.RemoteMessage(it))
+                    _messages.postValue(Message.RemoteMessage(recievedPacket.message))
                 }
             }
         }
@@ -315,7 +340,6 @@ object Server {
                 if(msg.isNotEmpty())
                 {
                     globalSuccess = sendMessage(msg)
-
                 }
 
                 msg = ""

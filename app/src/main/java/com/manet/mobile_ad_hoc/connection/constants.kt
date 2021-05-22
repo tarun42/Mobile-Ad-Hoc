@@ -21,6 +21,8 @@ object constants {
     const val REQUEST_ENABLE_BT = 1
     const val LOCATION_REQUEST_CODE = 0
     var isServer : Boolean = false;
+    var isHost : Boolean = false;
+    var isWifiConnectionEnabled : Boolean = false;
     var globalSuccess : Boolean = false
     var globalStr : String = "$$$"
 }
