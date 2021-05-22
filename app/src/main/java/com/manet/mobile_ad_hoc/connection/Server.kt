@@ -117,9 +117,9 @@ object Server {
     public  fun sendMessage(message: String): Boolean {
         Log.d(TAG, "Send a message")
         val gson = Gson()
-        val reader = JsonReader(StringReader(message))
-        reader.setLenient(true)
-        val dataPacket : packet = gson.fromJson(reader, packet::class.java)
+//        val reader = JsonReader(StringReader(message))
+//        reader.setLenient(true)
+//        val dataPacket : packet = gson.fromJson(message, packet::class.java)
 
         if(isServer)
         {
@@ -132,7 +132,7 @@ object Server {
                     val success = it.writeCharacteristic(message2Characteristic)
                     Log.d(TAG, "if(isServer)block : onServicesDiscovered: message send: $success")
                     if (success && message!= globalStr) {
-                        _messages.postValue(Message.LocalMessage(dataPacket.message))
+                        _messages.postValue(Message.LocalMessage(message))
                         globalStr = message;
 
                     }
@@ -152,7 +152,7 @@ object Server {
                     val success = it.writeCharacteristic(messageCharacteristic)
                     Log.d(TAG, "if(not isServer)block : onServicesDiscovered: message send: $success")
                     if (success && message!= globalStr) {
-                        _messages.postValue(Message.LocalMessage(dataPacket.message))
+                        _messages.postValue(Message.LocalMessage(message))
                         globalStr = message;
                     }
                     return success
@@ -276,20 +276,20 @@ object Server {
                 Log.d(TAG, "Server( if (characteristic.uuid == MESSAGE_UUID && isServer) ) : onCharacteristicWriteRequest: Have message: \"$message\"")
                 message?.let {
 //                    val recievedPacket = Gson().fromJson<packet>(message, packet::class.java)
+                    Log.d("recievedPacket",""+message)
+//                    val gson = Gson()
+//                    val reader = JsonReader(StringReader(message))
+//                    reader.setLenient(true)
+//                    val recievedPacket : packet = gson.fromJson(reader, packet::class.java)
 
-                    val gson = Gson()
-                    val reader = JsonReader(StringReader(message))
-                    reader.setLenient(true)
-                    val recievedPacket : packet = gson.fromJson(reader, packet::class.java)
-
-
-                    _messages.postValue(Message.RemoteMessage(recievedPacket.message))
+                    _messages.postValue(Message.RemoteMessage(message))
 
                     if(isServer)
                     {
                         Log.d(TAG, "RESPONSE MSG FROM SERVER IS SENDING...")
                         setCurrentChatConnection(tempDevice, " CONFIRMATION ")
-                        boardCast(message)
+                        var datapacket = Gson().toJson(packet(message.trim(),"name","none","wifi",1))
+                        boardCast(datapacket)
 //                        sendMessage(device.name + " CONFIRMATION ")
                     }
                 }
@@ -300,16 +300,16 @@ object Server {
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
                 val message = value?.toString(Charsets.UTF_8)
 //                val recievedPacket = Gson().fromJson<packet>(message,packet::class.java)
-                val gson = Gson()
-                val reader = JsonReader(StringReader(message))
-                reader.setLenient(true)
-                Log.d("recievedPacket",""+message)
-                val recievedPacket : packet = gson.fromJson(reader, packet::class.java)
+//                val gson = Gson()
+//                val reader = JsonReader(StringReader(message))
+//                reader.setLenient(true)
+//                Log.d("recievedPacket",""+message)
+//                val recievedPacket : packet = gson.fromJson(reader, packet::class.java)
 
                 var tempDevice : BluetoothDevice = device
                 Log.d(TAG, "Server( if(characteristic.uuid == MESSAGE_UUID2 && !isServer) ) : onCharacteristicWriteRequest: Have message: \"$message\"")
                 message?.let {
-                    _messages.postValue(Message.RemoteMessage(recievedPacket.message))
+                    _messages.postValue(Message.RemoteMessage(message))
                 }
             }
         }

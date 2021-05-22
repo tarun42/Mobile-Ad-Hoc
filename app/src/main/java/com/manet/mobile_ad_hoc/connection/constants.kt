@@ -23,10 +23,13 @@ object constants {
     var isServer : Boolean = false;
     var isHost : Boolean = false;
     var isWifiConnectionEnabled : Boolean = false;
+    var isBleConnectionEnabled : Boolean = false
     var globalSuccess : Boolean = false
     var globalStr : String = "$$$"
 }
-
+interface  rotater{
+    fun callSendinfFunc(message : String)
+}
 fun View.visible() {
     this.visibility = View.VISIBLE
 }

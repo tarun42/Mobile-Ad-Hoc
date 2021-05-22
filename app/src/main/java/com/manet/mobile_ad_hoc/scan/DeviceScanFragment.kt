@@ -32,13 +32,11 @@ import com.example.bluetoothlechat.*
 import com.example.bluetoothlechat.chat.MessageAdapter
 import com.example.bluetoothlechat.scan.DeviceScanViewModel
 import com.google.gson.Gson
-import com.manet.mobile_ad_hoc.connection.Server
+import com.manet.mobile_ad_hoc.connection.*
 import com.manet.mobile_ad_hoc.connection.constants.globalSuccess
+import com.manet.mobile_ad_hoc.connection.constants.isBleConnectionEnabled
 import com.manet.mobile_ad_hoc.connection.constants.isHost
 import com.manet.mobile_ad_hoc.connection.constants.isServer
-import com.manet.mobile_ad_hoc.connection.exhaustive
-import com.manet.mobile_ad_hoc.connection.gone
-import com.manet.mobile_ad_hoc.connection.visible
 import com.manet.mobile_ad_hoc.databinding.FragmentDeviceScanBinding
 import com.manet.mobile_ad_hoc.scan.Message
 import com.manet.wifidirect.packet
@@ -61,7 +59,7 @@ class Run {
     }
 }
 
-class DeviceScanFragment : Fragment() {
+class DeviceScanFragment : Fragment() , rotater {
 
     var activity : MainActivity? = null;
     private val deviceConnectionObserver = Observer<DeviceConnectionState> { state ->
@@ -163,25 +161,7 @@ class DeviceScanFragment : Fragment() {
         binding.sendMessage.setOnClickListener(View.OnClickListener {
 //            Log.d(TAG, "SENDMESSGE PRESSED")
             val message = binding.messageText.text.toString()
-            var count: Int = 1;
-            var tempFlag = false
-            if (message.isNotEmpty()) {
-                Log.d(TAG, "SENDMESSGE PRESSED")
-
-                var datapacket = Gson().toJson(packet(message,"name","none","Ble",1))
-
-                for ((k, v) in CopyscanResults) {
-                    Run.after((500 * count).toLong(), {
-                        onDeviceSelected(v,datapacket.trim())
-                    })
-                    count++;
-                }
-
-                datapacket = Gson().toJson(packet(message.trim(),"name","none","wifi",1))
-                boardCast(datapacket.trim() )
-                globalSuccess = false;
-                Log.d("TAG","COUNT : "+count)
-            }
+            callSendFunc(message)
 
         })
 
@@ -194,7 +174,28 @@ class DeviceScanFragment : Fragment() {
 
         return binding.root
     }
+fun callSendFunc(message : String){
 
+    var count: Int = 1;
+    var tempFlag = false
+    if (message.isNotEmpty()) {
+        Log.d(TAG, "SENDMESSGE PRESSED")
+
+//                var datapacket = Gson().toJson(packet(message,"name","none","Ble",1))
+//                Log.d(TAG,"sendinf datapacket : "+datapacket)
+        for ((k, v) in CopyscanResults) {
+            Run.after((500 * count).toLong(), {
+                onDeviceSelected(v,message)
+            })
+            count++;
+        }
+
+        var datapacket = Gson().toJson(packet(message.trim(),"name","none","wifi",1))
+        boardCast(datapacket.trim() )
+        globalSuccess = false;
+        Log.d("TAG","COUNT : "+count)
+    }
+}
     override fun onStart() {
         super.onStart()
 
@@ -256,6 +257,7 @@ class DeviceScanFragment : Fragment() {
 //                onDeviceSelected(v)
 //            }
 //            binding.chat.visible()
+    isBleConnectionEnabled = true;
             binding.connectedContainer.visible()
 
             binding.scanning.gone()
@@ -309,5 +311,9 @@ class DeviceScanFragment : Fragment() {
 
     private fun showAdvertisingError() {
         showError("BLE advertising is not supported on this device")
+    }
+
+    override fun callSendinfFunc(message: String) {
+        callSendFunc(message)
     }
 }

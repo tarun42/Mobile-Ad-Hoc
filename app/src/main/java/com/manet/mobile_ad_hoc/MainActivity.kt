@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.webkit.WebViewFragment
 import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
@@ -43,7 +44,7 @@ var serverClass = arrayOf<MainActivity.ServerClass>(
     MainActivity.ServerClass()
 )
 var clientClass : MainActivity.ClientClass? = null
-
+var fragment : DeviceScanFragment? = null
 public fun boardCast(msg : String)
 {
     val executorService = Executors.newSingleThreadExecutor()
@@ -64,6 +65,7 @@ public fun boardCast(msg : String)
 
 
 class MainActivity : AppCompatActivity() {
+
 
     var groupOwnerAddress: String? = null
     private val intentFilter = IntentFilter()
@@ -90,7 +92,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         cxt = this
-
+        fragment = DeviceScanFragment()
         Server.startServer(application)
         // Indicates a change in the Wi-Fi P2P status.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION)
@@ -127,6 +129,7 @@ class MainActivity : AppCompatActivity() {
 
         // String from WifiP2pInfo struct
         val groupOwnerAddress: InetAddress = info.groupOwnerAddress
+//        fragment = supportFragmentManager.findFragmentById(R.id.deviceScanFragment) as DeviceScanFragment?
         Log.d(com.manet.wifidirect.TAG,"val groupOwnerAddress: String = "+ groupOwnerAddress.toString())
         Toast.makeText(this,"val groupOwnerAddress: String = "+ groupOwnerAddress.address.toString(),Toast.LENGTH_SHORT).show()
         // After the group negotiation, we can determine the group owner
@@ -287,6 +290,7 @@ class MainActivity : AppCompatActivity() {
                                     val recievedPacket = Gson().fromJson<packet>(tempMsg, packet::class.java)
                                     Toast.makeText(cxt, "tempMSG : ${recievedPacket.message}", Toast.LENGTH_SHORT).show()
                                     boardCast(tempMsg)
+                                    fragment!!.callSendFunc(recievedPacket.message)
                                     Server._messages.postValue(Message.RemoteMessage(recievedPacket.message))
 
                                 }
@@ -336,6 +340,8 @@ class MainActivity : AppCompatActivity() {
                                     val tempMsg = String(buffer, 0, finalBytes)
                                     val recievedPacket = Gson().fromJson<packet>(tempMsg, packet::class.java)
                                     Toast.makeText(cxt, "tempMSG : ${recievedPacket.message}", Toast.LENGTH_SHORT).show()
+
+                                    fragment!!.callSendFunc(recievedPacket.message)
                                     Server._messages.postValue(Message.LocalMessage(recievedPacket.message))
 
                                 }

@@ -12,6 +12,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.manet.mobile_ad_hoc.MainActivity
+import com.manet.mobile_ad_hoc.connection.constants.isBleConnectionEnabled
+import com.manet.mobile_ad_hoc.connection.constants.isWifiConnectionEnabled
 
 
 var TAG : String = "WiFiDirectBroadcastReceiver"
@@ -36,11 +38,20 @@ class WiFiDirectBroadcastReceiver(
             Toast.makeText(activity, "Found a Device"+" List length : "+peers.size, Toast.LENGTH_SHORT).show()
             handler.post {
 //                activity.deviceName?.text  = peers.get(0).deviceName
+
                 var ind =0;
                 for( peer in peers)
                 {
                     activity.devices[ind]=peer.deviceName
                     ind++;
+
+                    if(!isBleConnectionEnabled && !isWifiConnectionEnabled)
+                    {
+                        Toast.makeText(activity,"Connectpeer is calling",Toast.LENGTH_SHORT).show()
+                        activity.connectPeer(peer);
+                        break;
+                    }
+
 //                    activity.arrayAdapter!!.notifyDataSetChanged()
                 }
             }
