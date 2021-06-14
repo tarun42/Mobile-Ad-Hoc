@@ -23,6 +23,7 @@ import com.manet.mobile_ad_hoc.connection.constants.SERVICE_UUID
 import com.manet.mobile_ad_hoc.connection.constants.globalStr
 import com.manet.mobile_ad_hoc.connection.constants.globalSuccess
 import com.manet.mobile_ad_hoc.connection.constants.isServer
+import com.manet.mobile_ad_hoc.connection.constants.userName
 import com.manet.mobile_ad_hoc.scan.Message
 import com.manet.wifidirect.packet
 import java.io.StringReader
@@ -95,9 +96,7 @@ object Server {
         }
     }
 
-//    fun stopServer() {
-//        stopAdvertising()
-//    }
+
 
     fun setCurrentChatConnection(device: BluetoothDevice, recievedMsg : String) {
         currentDevice = device
@@ -116,10 +115,6 @@ object Server {
 
     public  fun sendMessage(message: String): Boolean {
         Log.d(TAG, "Send a message")
-        val gson = Gson()
-//        val reader = JsonReader(StringReader(message))
-//        reader.setLenient(true)
-//        val dataPacket : packet = gson.fromJson(message, packet::class.java)
 
         if(isServer)
         {
@@ -132,7 +127,7 @@ object Server {
                     val success = it.writeCharacteristic(message2Characteristic)
                     Log.d(TAG, "if(isServer)block : onServicesDiscovered: message send: $success")
                     if (success && message!= globalStr) {
-                        _messages.postValue(Message.LocalMessage(message))
+                        _messages.postValue(Message.LocalMessage(message.substring(0,message.indexOf(":"))))
                         globalStr = message;
 
                     }
@@ -152,7 +147,7 @@ object Server {
                     val success = it.writeCharacteristic(messageCharacteristic)
                     Log.d(TAG, "if(not isServer)block : onServicesDiscovered: message send: $success")
                     if (success && message!= globalStr) {
-                        _messages.postValue(Message.LocalMessage(message))
+                        _messages.postValue(Message.LocalMessage(message.substring(0,message.indexOf(":"))))
                         globalStr = message;
                     }
                     return success
@@ -216,11 +211,6 @@ object Server {
     }
 
 
-//    private fun stopAdvertising() {
-//        Log.d(TAG, "Stopping Advertising with advertiser $advertiser")
-//        advertiser?.stopAdvertising(advertiseCallback)
-//        advertiseCallback = null
-//    }
 
 
     private fun buildAdvertiseData(): AdvertiseData {
@@ -277,18 +267,20 @@ object Server {
                 message?.let {
 //                    val recievedPacket = Gson().fromJson<packet>(message, packet::class.java)
                     Log.d("recievedPacket",""+message)
-//                    val gson = Gson()
-//                    val reader = JsonReader(StringReader(message))
-//                    reader.setLenient(true)
-//                    val recievedPacket : packet = gson.fromJson(reader, packet::class.java)
-
                     _messages.postValue(Message.RemoteMessage(message))
 
                     if(isServer)
                     {
                         Log.d(TAG, "RESPONSE MSG FROM SERVER IS SENDING...")
-                        setCurrentChatConnection(tempDevice, " CONFIRMATION ")
-                        var datapacket = Gson().toJson(packet(message.trim(),"name","none","wifi",1))
+                        setCurrentChatConnection(tempDevice, " AKG:"+ userName+":ble")
+
+                        var ind1 = message.indexOf(":")
+                        var msg = message.substring(ind1+1)
+                        var ind2 = msg.indexOf(":")
+                        Log.d("=======================",msg.slice(0..ind2-1))
+
+
+                        var datapacket = Gson().toJson(packet(message.substring(0,message.indexOf(":")) ,msg.slice(0..ind2-1)+"->"+userName!!,"none","wifi",1))
                         boardCast(datapacket)
 //                        sendMessage(device.name + " CONFIRMATION ")
                     }

@@ -26,6 +26,7 @@ object constants {
     var isBleConnectionEnabled : Boolean = false
     var globalSuccess : Boolean = false
     var globalStr : String = "$$$"
+    var userName : String? = null
 }
 interface  rotater{
     fun callSendinfFunc(message : String)

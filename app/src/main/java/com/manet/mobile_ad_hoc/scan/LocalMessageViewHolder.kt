@@ -24,8 +24,11 @@ import com.manet.mobile_ad_hoc.scan.Message
 class LocalMessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     private val messageText = itemView.findViewById<TextView>(R.id.message_text)
+    private val sourceText = itemView.findViewById<TextView>(R.id.source)
+//    private val messageText = itemView.findViewById<TextView>(R.id.message_text)
 
     fun bind(message: Message.LocalMessage) {
+
         messageText.text = message.text
     }
 }

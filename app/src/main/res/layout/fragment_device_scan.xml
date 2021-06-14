@@ -127,6 +127,7 @@
             android:padding="16dp"
             android:layout_gravity="center_horizontal"/>
 
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/messages"
             android:layout_width="match_parent"

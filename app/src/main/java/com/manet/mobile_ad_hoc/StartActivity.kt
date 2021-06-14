@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.manet.mobile_ad_hoc.connection.constants.userName
 
 
 class StartActivity : AppCompatActivity() {
@@ -18,14 +19,16 @@ class StartActivity : AppCompatActivity() {
         setContentView(R.layout.activity_start)
         ScanUid = findViewById(R.id.ScanUid)
         UID = findViewById(R.id.UID)
+
         val intent = Intent(this, MainActivity::class.java)
         ScanUid!!.setOnClickListener {
             val data: String
             data = UID!!.text.toString()
-            if (data.length == 0 || data.contains(" ") || data.contains("\\")) Toast.makeText(
-                applicationContext, "Please enter a valid ID", Toast.LENGTH_LONG
-            ).show() else {
-                // Save data saomewhewe
+            if (data.length == 0 || data.contains(" ") || data.contains("\\"))
+                Toast.makeText(applicationContext, "Please enter a valid ID", Toast.LENGTH_LONG
+            ).show()
+            else {
+                userName = data;
                 Toast.makeText(applicationContext, "User ID: $data", Toast.LENGTH_LONG).show()
                 // make intent call;
                 startActivity(intent)

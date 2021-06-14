@@ -16,6 +16,7 @@
 package com.manet.mobile_ad_hoc
 
 import android.bluetooth.BluetoothDevice
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -24,8 +25,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bluetoothlechat.*
@@ -33,16 +32,16 @@ import com.example.bluetoothlechat.chat.MessageAdapter
 import com.example.bluetoothlechat.scan.DeviceScanViewModel
 import com.google.gson.Gson
 import com.manet.mobile_ad_hoc.connection.*
+import com.manet.mobile_ad_hoc.connection.constants.globalStr
 import com.manet.mobile_ad_hoc.connection.constants.globalSuccess
 import com.manet.mobile_ad_hoc.connection.constants.isBleConnectionEnabled
-import com.manet.mobile_ad_hoc.connection.constants.isHost
 import com.manet.mobile_ad_hoc.connection.constants.isServer
+import com.manet.mobile_ad_hoc.connection.constants.userName
 import com.manet.mobile_ad_hoc.databinding.FragmentDeviceScanBinding
 import com.manet.mobile_ad_hoc.scan.Message
 import com.manet.wifidirect.packet
 import java.util.*
-import java.util.concurrent.ScheduledThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+
 
 private const val TAG = "DeviceScanFragment"
 const val GATT_KEY = "gatt_bundle_key"
@@ -61,6 +60,7 @@ class Run {
 
 class DeviceScanFragment : Fragment() , rotater {
 
+    var linearLayoutManager : LinearLayoutManager? = null
     var activity : MainActivity? = null;
     private val deviceConnectionObserver = Observer<DeviceConnectionState> { state ->
         when(state) {
@@ -94,12 +94,6 @@ class DeviceScanFragment : Fragment() , rotater {
     private val binding
         get() = _binding!!
     private val viewModel: DeviceScanViewModel by viewModels()
-
-//    private val deviceScanAdapter by lazy {
-//        DeviceScanAdapter(onDeviceSelected)
-//    }
-//private val _repeatSearch = MutableLiveData<Int>()
-//    val repeatSearch = _repeatSearch as LiveData<Int>
 
     private val viewStateObserver = Observer<DeviceScanViewState> { state ->
         when (state) {
@@ -153,24 +147,26 @@ class DeviceScanFragment : Fragment() , rotater {
             savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentDeviceScanBinding.inflate(inflater, container, false)
-        binding.messages.layoutManager = LinearLayoutManager(context)
+        linearLayoutManager = LinearLayoutManager(context)
+        linearLayoutManager!!.stackFromEnd = true
+        linearLayoutManager!!.reverseLayout = true
+
+        binding.messages.layoutManager = linearLayoutManager
         binding.messages.adapter = adapter
-
-        activity = context as MainActivity ;
-
-        binding.sendMessage.setOnClickListener(View.OnClickListener {
-//            Log.d(TAG, "SENDMESSGE PRESSED")
-            val message = binding.messageText.text.toString()
-            callSendFunc(message)
-
+        binding.messages.addOnLayoutChangeListener(View.OnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            if (bottom < oldBottom) {
+                binding.messages.postDelayed(Runnable {
+                    if(binding.messages.getAdapter()!!.getItemCount() != 0)
+                        binding.messages.smoothScrollToPosition(0)
+                }, 100)
+            }
         })
-
-
-
-//        binding.deviceList.apply {
-//            layoutManager = LinearLayoutManager(requireContext())
-//            adapter = deviceScanAdapter
-//        }
+        activity = context as MainActivity ;
+        binding.sendMessage.setOnClickListener(View.OnClickListener {
+            val message = binding.messageText.text.toString()
+            binding.messageText.text.clear()
+            callSendinfFunc(message+":"+ userName+":ble")
+        })
 
         return binding.root
     }
@@ -178,11 +174,9 @@ fun callSendFunc(message : String){
 
     var count: Int = 1;
     var tempFlag = false
-    if (message.isNotEmpty()) {
+    if (message.indexOf(":")!=0) {
         Log.d(TAG, "SENDMESSGE PRESSED")
 
-//                var datapacket = Gson().toJson(packet(message,"name","none","Ble",1))
-//                Log.d(TAG,"sendinf datapacket : "+datapacket)
         for ((k, v) in CopyscanResults) {
             Run.after((500 * count).toLong(), {
                 onDeviceSelected(v,message)
@@ -190,18 +184,28 @@ fun callSendFunc(message : String){
             count++;
         }
 
-        var datapacket = Gson().toJson(packet(message.trim(),"name","none","wifi",1))
-        boardCast(datapacket.trim() )
+
+//        Server._messages.postValue(Message.LocalMessage(message.substring(0,message.indexOf(":")))); ////
+        var datapacket = Gson().toJson(packet(message.substring(0,message.indexOf(":")), userName!!,"none","wifi",1))
+        boardCast(datapacket)
+
+        if(globalStr!=message+":"+ userName+":"+"ble")   //
+        {
+            Server._messages.postValue(Message.LocalMessage(message.substring(0,message.indexOf(":"))))  //
+            globalStr=message  //
+        }  //
+
+
+
         globalSuccess = false;
         Log.d("TAG","COUNT : "+count)
+
     }
 }
     override fun onStart() {
         super.onStart()
 
         requireActivity().setTitle("Connecting...")
-//        requireActivity().setTitle(R.string.chat_title)
-//        Server.connectionRequest.observe(viewLifecycleOwner, connectionRequestObserver)
 
         Server.deviceConnection.observe(viewLifecycleOwner, deviceConnectionObserver)
         Server.messages.observe(viewLifecycleOwner, messageObserver)
@@ -214,7 +218,6 @@ fun callSendFunc(message : String){
 
     override fun onDestroyView() {
         super.onDestroyView()
-        //viewModel.becomeClient()
     }
 
 
@@ -250,14 +253,7 @@ fun callSendFunc(message : String){
         Log.d(TAG, "SIZE : " + scanResults.size)
         if (scanResults.isNotEmpty()) {
 
-//            binding.deviceList.visible()
-//            deviceScanAdapter.updateItems(scanResults.values.toList())
-
-//            for ((k, v) in scanResults) {
-//                onDeviceSelected(v)
-//            }
-//            binding.chat.visible()
-    isBleConnectionEnabled = true;
+            isBleConnectionEnabled = true;
             binding.connectedContainer.visible()
 
             binding.scanning.gone()

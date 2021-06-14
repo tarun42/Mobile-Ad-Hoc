@@ -13,15 +13,19 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.WindowManager
 import android.webkit.WebViewFragment
 import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import com.manet.mobile_ad_hoc.connection.Server
+import com.manet.mobile_ad_hoc.connection.constants.globalStr
 import com.manet.mobile_ad_hoc.connection.constants.isHost
 import com.manet.mobile_ad_hoc.connection.constants.isServer
 import com.manet.mobile_ad_hoc.connection.constants.isWifiConnectionEnabled
+import com.manet.mobile_ad_hoc.connection.constants.userName
 import com.manet.mobile_ad_hoc.scan.Message
 import com.manet.wifidirect.WiFiDirectBroadcastReceiver
 import com.manet.wifidirect.packet
@@ -91,6 +95,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        window?.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
         cxt = this
         fragment = DeviceScanFragment()
         Server.startServer(application)
@@ -187,18 +194,13 @@ class MainActivity : AppCompatActivity() {
         manager.createGroup(channel, object : WifiP2pManager.ActionListener {
             override fun onSuccess() {
                 // Device is ready to accept incoming connections from peers.
-                Toast.makeText(
-                    context,
-                    "Device is ready to accept incoming connections from peers",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(context, "Device is ready to accept incoming connections from peers", Toast.LENGTH_SHORT).show()
 
                 Log.d(com.manet.wifidirect.TAG, "Device is ready to accept incoming connections from peers")
             }
 
             override fun onFailure(reason: Int) {
-                Toast.makeText(context, "P2P group creation failed. Retry."+reason, Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(context, "P2P group creation failed. Retry."+reason, Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -289,9 +291,10 @@ class MainActivity : AppCompatActivity() {
                                     val tempMsg = String(buffer, 0, finalBytes)
                                     val recievedPacket = Gson().fromJson<packet>(tempMsg, packet::class.java)
                                     Toast.makeText(cxt, "tempMSG : ${recievedPacket.message}", Toast.LENGTH_SHORT).show()
-                                    boardCast(tempMsg)
-                                    fragment!!.callSendFunc(recievedPacket.message)
-                                    Server._messages.postValue(Message.RemoteMessage(recievedPacket.message))
+//                                    boardCast(tempMsg)
+                                    fragment!!.callSendinfFunc(recievedPacket.message+":" +recievedPacket.source+"->"+ userName!!+":ble") //
+
+                                    Server._messages.postValue(Message.RemoteMessage(recievedPacket.message+":"+recievedPacket.source+":"+recievedPacket.route))
 
                                 }
                             })
@@ -338,11 +341,26 @@ class MainActivity : AppCompatActivity() {
                             handler.post(object : Runnable {
                                 override fun run() {
                                     val tempMsg = String(buffer, 0, finalBytes)
-                                    val recievedPacket = Gson().fromJson<packet>(tempMsg, packet::class.java)
-                                    Toast.makeText(cxt, "tempMSG : ${recievedPacket.message}", Toast.LENGTH_SHORT).show()
+                                    Log.d("recievedPacket : ",tempMsg)
+                                    try{
+                                        val recievedPacket = Gson().fromJson<packet>(tempMsg, packet::class.java)
+                                        Toast.makeText(cxt, "tempMSG : ${recievedPacket.message}", Toast.LENGTH_SHORT).show()
+//                                        if(globalStr!="lol")//
+//                                        {
+                                            Server._messages.postValue(Message.RemoteMessage(recievedPacket.message+":"+recievedPacket.source+":"+recievedPacket.route))
 
-                                    fragment!!.callSendFunc(recievedPacket.message)
-                                    Server._messages.postValue(Message.LocalMessage(recievedPacket.message))
+//                                            Toast.makeText(cxt, "ye ni hona tha  : ${globalStr}", Toast.LENGTH_SHORT).show()
+//                                        }
+//                                        else//
+//                                            globalStr=""//
+                                    }
+                                    catch (e : JsonSyntaxException){
+                                        Server._messages.postValue(Message.RemoteMessage("Packet Dropped:"+ userName!!+":wifi"))
+                                    }
+
+
+//                                    fragment!!.callSendinfFunc(recievedPacket.message) //
+
 
                                 }
                             })
@@ -360,7 +378,5 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun checking(){
-        Toast.makeText(this,"mainActivity",Toast.LENGTH_SHORT).show()
-    }
+
 }
